@@ -1,5 +1,36 @@
 # Patch Notes
 
+## [v0.14.17] — 2026-04-19
+
+**Tipo:** Config
+**Esforço estimado:** 10min
+**Autor:** Claude (igor-devops, Opus 4.7)
+
+### Descrição
+Bump das 3 GitHub Actions do CI para versões Node 24-compatible (#4b41541d). Elimina o warning sobre Node 20 deprecation no output dos runs (forçado a Node 24 a partir de 2026-06-02, removido do runner em 2026-09-16) e resolve os PRs do Dependabot #22/#23 que ficam redundantes.
+
+### Alterações
+- `.github/workflows/ci.yml`:
+  - `actions/checkout@v4` → `actions/checkout@v5`.
+  - `actions/setup-node@v4` → `actions/setup-node@v5` (mantida config existente: `node-version` do matrix + `cache: pnpm`, API retrocompatível no major).
+  - `pnpm/action-setup@v4` → `pnpm/action-setup@v6`. O step continua sem `with:` porque v6 tem suporte nativo a ler do `packageManager` do `package.json` raiz (`pnpm@10.33.0`) — já alinhado ao fix de #8e42c9a4.
+
+### Impacto
+- **Warning de Node 20 deprecation removido** do output do CI.
+- **CI preparado para o corte automático de Node 20 em 2026-06-02**: sem esse bump, a partir daquela data GitHub forçaria Node 24 e poderíamos pegar breakage inesperado.
+- **Dependabot PRs #22 e #23** ficam redundantes (resolvidos manualmente neste push). Follow-up: comentar nos PRs "resolved manually in commit XXXXXXX" e fechar.
+- **Zero impacto em runtime**: apenas versões das actions de CI.
+
+### Verificação
+- Edit aplicado localmente; commit + push vão para `main` seguidos.
+- Run do CI verde precisa ser confirmado em https://github.com/leerichard2000/lee-agent-theater/actions (no primeiro run, conferir também que a linha `Node.js 20 actions are deprecated ...` sumiu do log).
+
+### Notas Técnicas
+- `actions/checkout@v5` e `actions/setup-node@v5` têm API retrocompatível com v4 para a config que usamos (checkout default + `node-version` + `cache`).
+- `pnpm/action-setup@v6` é a versão moderna que internaliza o padrão de single source of truth via `packageManager`. Dependabot PR #14 (bump v4→v6 aceito implicitamente aqui) fica redundante.
+
+---
+
 ## [v0.14.16] — 2026-04-19
 
 **Tipo:** Docs
