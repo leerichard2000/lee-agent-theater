@@ -1,5 +1,31 @@
 # Patch Notes
 
+## [v0.14.16] — 2026-04-19
+
+**Tipo:** Docs
+**Esforço estimado:** 45min
+**Autor:** Claude (bruno-frontend, Opus 4.7)
+
+### Descrição
+Publica `docs/dependabot-triage.md` — framework reutilizável para triar PRs do Dependabot em ~5min sem intervenção do tech lead (#4f4e7b56). O repo recebe Dependabot semanal com ~18 PRs acumulados; um doc vivo é mais valioso que um relatório pontual.
+
+### Alterações
+- `docs/dependabot-triage.md` (novo) — árvore de decisão por tipo de bump (dev vs runtime × patch/minor/major), inventário completo das deps de todos os 10 workspaces (root, `apps/web`, `apps/server`, `packages/core`, 6 adapters) classificadas em 🟢 merge/🟡 smoke test/🔴 hold com justificativa técnica por dep. Inclui também padrões de título do Dependabot, workflow de "Update branch", e config sugerida de `dependabot.yml` com agrupamento + ignore de majors perigosos.
+- `PATCH_NOTES.md` — v0.14.16.
+
+### Impacto
+- **Operacional:** usuário consegue processar PRs do Dependabot lendo só o título e aplicando a tabela; não precisa abrir o diff nem esperar o lead.
+- **Reutilizável:** framework cobre bumps futuros, não só os 18 atuais. Quando uma dep entra/sai do repo, basta atualizar a tabela correspondente.
+- **Cross-reference:** o doc aponta pro `PATCH_NOTES v0.11.5` (pin do zod) e pro `CONTRIBUTING.md`/`docs/publish-readiness.md` pra quem quiser contexto histórico.
+
+### Notas Técnicas
+- **Decisão "Opção 2" pelo tech lead:** triagem por PR específico exigiria acesso ao GitHub API (sem gh CLI nem rede externa neste ambiente). O framework evita essa dependência e fica útil além dos 18 PRs atuais.
+- **Inventário construído por leitura direta dos 10 `package.json` do monorepo** — não especulativo.
+- **Três categorias de risco** refletem posição real das libs no nosso código: `phaser 3→4` é 🔴 permanente (engine diferente, sprites/TheaterScene reescrita), `react 18→19` é 🔴 hold planejado, `zod 3.25.x` é 🔴 pinado (incidente documentado).
+- **Config sugerida de `dependabot.yml`** fica como follow-up explícito (não parte da task) — ela reduziria os 18 PRs atuais pra ~3-4/semana agrupados.
+
+---
+
 ## [v0.14.15] — 2026-04-19
 
 **Tipo:** Fix (CI)
