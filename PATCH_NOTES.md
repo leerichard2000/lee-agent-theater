@@ -1,5 +1,42 @@
 # Patch Notes
 
+## [v0.14.13] — 2026-04-19
+
+**Tipo:** Fix
+**Esforço estimado:** 30min
+**Autor:** Claude (bruno-frontend, Opus 4.7)
+
+### Descrição
+Limpa dois ruídos no console do browser em `vite dev` (#ed3b0818):
+
+1. **WebSocket tentando conectar em `:5173`** ("WebSocket is closed before the connection is established"). Causa dupla: (a) o default do `wsService.connect()` montava a URL a partir de `window.location.host` — em dev essa porta é do vite, não do Fastify; mesmo com o proxy `/ws → :3001` configurado, o vite HMR usa o mesmo path e há ruído de disputa; (b) React 18 StrictMode monta/desmonta o `useEffect` de `App.tsx` duas vezes em dev, disparando `connect → disconnect → connect` e gerando o erro visível de socket fechado antes de abrir.
+2. **AudioContext bloqueado pelo Chrome** ("The AudioContext was not allowed to start. It must be resumed..."). Causa: Phaser tenta inicializar `AudioContext` no boot e Chrome bloqueia até interação do user. O projeto não usa áudio, então o warning é puro ruído.
+
+### Alterações
+- `apps/web/src/services/websocket.ts`:
+  - Nova função `defaultServerUrl()` no escopo do módulo. Em dev (`import.meta.env.DEV === true` e porta diferente de 3001), força `ws://localhost:3001`. Em prod, usa `window.location.host`. Override via `VITE_WS_URL` disponível.
+  - `connect()` agora é idempotente: se já existe socket em `OPEN`/`CONNECTING`, retorna sem abrir um segundo. Defende contra o double-mount do StrictMode.
+- `apps/web/src/phaser/config.ts`:
+  - Adicionado `audio: { noAudio: true }` na config do Phaser. Elimina o warning do AudioContext sem afetar nada (o projeto não tem sprites de som).
+- `apps/web/src/vite-env.d.ts` (novo):
+  - Referência a `vite/client` para tipar `import.meta.env` + declaração de `VITE_WS_URL`. Necessário após o uso de `import.meta.env.DEV` no websocket.ts.
+- `PATCH_NOTES.md` — v0.14.13.
+
+### Impacto
+- **Console limpo em dev** (`:5173`) — zero erro de WebSocket e zero warning de AudioContext.
+- **Comportamento funcional inalterado:** a cena renderiza, eventos chegam via WS, replay funciona. O redirect do WS em dev para `:3001` é direto (sem passar pelo proxy do vite), então a latência some também.
+- **Prod inalterado:** quando o user roda `pnpm dev:server` (server Fastify servindo os estáticos na mesma origem), o `defaultServerUrl()` cai no branch `window.location.host` e tudo continua igual.
+- `pnpm lint` + `pnpm typecheck` + `pnpm --filter @theater/web build` todos limpos.
+
+### Notas Técnicas
+- **Por que não depender só do proxy do vite:** o proxy `/ws → ws://localhost:3001` funciona, mas o vite HMR também escuta em WS. Em StrictMode, o primeiro connect cai no proxy, é fechado pelo cleanup, e o erro visível no console aparece. Bater direto no Fastify em dev evita a disputa e torna o fluxo de dev mais explícito.
+- **StrictMode defense:** o `useEffect` no `App.tsx` chama `wsService.connect()` no mount. O StrictMode em dev monta duas vezes — o primeiro mount roda `connect()`, depois o cleanup roda `disconnect()` (que fecha o socket em estado CONNECTING), depois o segundo mount roda `connect()` de novo. O resultado visual era sempre o mesmo (conexão final OK), mas o log poluía. A guarda `readyState === OPEN | CONNECTING` no `connect` torna o segundo call no-op.
+- **`audio: { noAudio: true }`:** é a forma oficial documentada do Phaser 3 para pular o subsistema de som. Se alguém adicionar áudio no futuro, basta omitir o campo.
+- **`VITE_WS_URL`:** exposta como escape hatch para casos de dev em container/VM onde `localhost:3001` não bate. Não obrigatória.
+- **Sprites intocados** (`apps/web/src/phaser/sprites/*`).
+
+---
+
 ## [v0.14.12] — 2026-04-19
 
 **Tipo:** Docs

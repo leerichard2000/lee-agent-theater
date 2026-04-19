@@ -43,6 +43,12 @@ export function createPhaserConfig(
 
     physics: undefined,
 
+    // Sem áudio por enquanto (#ed3b0818). Suprime o warning
+    // "AudioContext was not allowed to start" do Chrome, já que o projeto
+    // não usa sprites de som nem música. Trocar para omitir o campo (default)
+    // se/quando alguém adicionar áudio no futuro.
+    audio: { noAudio: true },
+
     transparent: false,
     backgroundColor: '#0F1923',
 

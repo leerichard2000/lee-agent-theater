@@ -20,6 +20,33 @@ import { theaterStore } from '../stores/theaterStore.js';
  */
 const HISTORY_FETCH_LIMIT = 1000;
 
+/**
+ * Porta onde o server Fastify roda em dev (`pnpm dev:server`). Em prod o
+ * server serve os estáticos na mesma origem do frontend, então não precisa.
+ */
+const DEV_SERVER_PORT = 3001;
+
+/**
+ * Resolve a URL base do WebSocket para o ambiente atual (#ed3b0818):
+ *  - Dev (vite `:5173`): aponta direto para `ws://localhost:3001`. Evita
+ *    colisão com o HMR WebSocket do vite e o erro "closed before connection
+ *    established" quando o StrictMode remonta o effect.
+ *  - Prod / same-origin: usa `window.location.host` (Fastify serve tudo).
+ *  - Override manual via `VITE_WS_URL` (raramente necessário).
+ */
+function defaultServerUrl(): string {
+  const envUrl = import.meta.env.VITE_WS_URL as string | undefined;
+  if (envUrl) return envUrl;
+
+  const loc = window.location;
+  const proto = loc.protocol === 'https:' ? 'wss:' : 'ws:';
+
+  if (import.meta.env.DEV && loc.port !== String(DEV_SERVER_PORT)) {
+    return `${proto}//${loc.hostname}:${DEV_SERVER_PORT}`;
+  }
+  return `${proto}//${loc.host}`;
+}
+
 /** Intervalo de polling para atualizar lista de sessões (ms) */
 const SESSION_POLL_INTERVAL_MS = 10_000;
 
@@ -32,8 +59,31 @@ class WebSocketService {
   private intentionalClose = false;
   private currentUrl = '';
 
-  /** Conecta ao server WebSocket */
-  connect(serverUrl = `ws://${window.location.host}`, sessionId?: string): void {
+  /**
+   * Conecta ao server WebSocket.
+   *
+   * URL default (#ed3b0818):
+   *  - Dev (vite em `:5173`): força `ws://localhost:3001` direto, evitando
+   *    colisão com o HMR WS do vite no mesmo path e a flag de erro no
+   *    console quando o React StrictMode monta/desmonta duas vezes.
+   *  - Prod: usa `window.location.host` (server Fastify serve os estáticos
+   *    na mesma origem, então o WS fala com o mesmo host).
+   *
+   * Idempotência: se já existe um WebSocket aberto/conectando, ignora o
+   * connect para não criar dois sockets em paralelo (React 18 StrictMode
+   * chama `useEffect` 2x em dev, o que disparava "WebSocket is closed
+   * before the connection is established" no console).
+   */
+  connect(serverUrl = defaultServerUrl(), sessionId?: string): void {
+    // Se já há conexão ativa (ou em progresso), não cria outra.
+    if (
+      this.ws &&
+      (this.ws.readyState === WebSocket.OPEN ||
+        this.ws.readyState === WebSocket.CONNECTING)
+    ) {
+      return;
+    }
+
     this.intentionalClose = false;
     this.currentUrl = serverUrl;
 
