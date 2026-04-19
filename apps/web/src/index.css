@@ -1,0 +1,71 @@
+/* Fontes do design system — spec UX seção 8 (deve vir antes de qualquer outro @import) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&display=swap');
+
+@import "tailwindcss";
+
+/*
+ * Variáveis de cor do design system (spec UX seção 8).
+ * Usadas diretamente via Tailwind arbitrary values nos componentes.
+ */
+@theme {
+  --color-bg-deep: #0A0A14;
+  --color-bg-primary: #0D0D1A;
+  --color-bg-secondary: #1A1A2E;
+  --color-bg-card: #1A1A2E;
+  --color-bg-card-active: #252540;
+  --color-bg-card-hover: #222238;
+  --color-bg-header: #12121F;
+
+  --color-text-primary: #E8E8F0;
+  --color-text-secondary: #8888AA;
+  --color-text-muted: #555570;
+  --color-text-accent: #4169E1;
+
+  --color-accent-primary: #4169E1;
+  --color-accent-success: #2ECC71;
+  --color-accent-warning: #F1C40F;
+  --color-accent-error: #E74C3C;
+  --color-accent-info: #1ABC9C;
+
+  --color-border-default: #2D2D44;
+}
+
+/* Reset e base */
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #0A0A14;
+  color: #E8E8F0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Scrollbar customizada para o dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1A1A2E;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2D2D44;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4169E1;
+}
+
+/* Suporte a prefers-reduced-motion (spec UX seção 10) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@theater/core",
+  "version": "0.1.0",
+  "description": "Tipos, contratos de evento, estados e utilitários compartilhados do Lee Agent Theater",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "license": "MIT"
+}

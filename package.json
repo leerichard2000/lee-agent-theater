@@ -1,0 +1,62 @@
+{
+  "name": "lee-agent-theater",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Visualizacao teatral em tempo real de comunicacao entre agentes de IA",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leerichard2000/lee-agent-theater.git"
+  },
+  "homepage": "https://github.com/leerichard2000/lee-agent-theater#readme",
+  "bugs": {
+    "url": "https://github.com/leerichard2000/lee-agent-theater/issues"
+  },
+  "scripts": {
+    "dev": "concurrently -n server,web -c blue,green \"pnpm --filter @theater/server dev\" \"pnpm --filter @theater/web dev\"",
+    "dev:web": "pnpm --filter @theater/web dev",
+    "dev:server": "pnpm --filter @theater/web build && pnpm --filter @theater/server dev",
+    "build": "pnpm -r build",
+    "build:web": "pnpm --filter @theater/web build",
+    "build:server": "pnpm --filter @theater/server build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean"
+  },
+  "keywords": [
+    "agent-theater",
+    "multi-agent",
+    "visualization",
+    "phaser",
+    "claude",
+    "typescript",
+    "monorepo",
+    "react",
+    "fastify",
+    "websocket"
+  ],
+  "author": "Lee Richard <leerichard2000@gmail.com>",
+  "license": "MIT",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "prettier": "^3.4.0",
+    "typescript-eslint": "^8.18.0"
+  }
+}

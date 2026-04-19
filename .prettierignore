@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Saídas de ferramentas externas / assets não-fonte
+.playwright-mcp/
+docs/screenshots/
+
+# Patch notes e changelog têm formatação manual preservada
+PATCH_NOTES.md
+CHANGELOG.md
+
+# Lockfiles (pnpm mantém próprio formato)
+pnpm-lock.yaml
