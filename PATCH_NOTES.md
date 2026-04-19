@@ -1,5 +1,67 @@
 # Patch Notes
 
+## [v0.14.15] — 2026-04-19
+
+**Tipo:** Fix (CI)
+**Esforço estimado:** 45min
+**Autor:** Claude (carlos-backend, Opus 4.7)
+
+### Descrição
+Com o CI do GitHub Actions destravado pelo @igor-devops em #8e42c9a4, o push da v0.14.14 e os Dependabot PRs #22/#23 começaram a falhar com erros reais de typecheck que antes ficavam invisíveis:
+
+```
+Property 'running' does not exist on type 'ClaudeHooksAdapter'.
+Cannot find module '@theater/core' or its corresponding type declarations.
+Property 'running' does not exist on type 'ClaudeSdkAdapter'.
+...
+```
+
+Reproduzi localmente simulando checkout fresh (`rm -rf packages/*/dist packages/*/tsconfig.tsbuildinfo apps/*/dist apps/*/tsconfig.tsbuildinfo`). Descobri que o problema **não é só nos 2 stubs mencionados no ticket** — **todos os 6 adapters + apps/web + apps/server** falham no CI fresh pelo mesmo motivo.
+
+### Causa raiz
+
+- `@theater/core/package.json` aponta `"types": "./dist/index.d.ts"` (sem condição source). Sem o `dist/` gerado, TypeScript não encontra types.
+- Cada pacote rodava `tsc --noEmit` no script `typecheck`. `--noEmit` sozinho **não respeita project references** — então mesmo que `tsconfig.json` de cada adapter declare `references: [{ path: "../../core" }]`, o TS não dispara o build do core antes.
+- Em CI fresh, `@theater/core` fica "ausente" para os adapters → `BaseAdapter` vira `any` → propriedades como `running`, `emit()` "não existem".
+- Local, como o `dist` do core sobrevivia entre execuções, o typecheck passava — mascarando o bug.
+
+### Correção aplicada
+
+Mudança simples e cirúrgica: trocar `tsc --noEmit` / `tsc` por `tsc -b` nos scripts `typecheck` e `build` de cada pacote que depende de `@theater/core`. `tsc -b` (`--build`) respeita `references` e builda as dependências upstream automaticamente.
+
+Arquivos alterados (8 package.json):
+
+- `packages/adapters/adapter-claude-hooks/package.json` — `build: "tsc -b"`, `typecheck: "tsc -b"`
+- `packages/adapters/adapter-claude-sdk/package.json` — idem
+- `packages/adapters/adapter-claude-local/package.json` — idem
+- `packages/adapters/adapter-demo/package.json` — idem
+- `packages/adapters/adapter-mcp/package.json` — idem
+- `packages/adapters/adapter-file-log/package.json` — idem
+- `apps/server/package.json` — idem
+- `apps/web/package.json` — `typecheck: "tsc -b"` (build já usava `tsc -b && vite build`)
+
+Zero mudança em `packages/core` (brief era explícito: "NÃO modificar packages/core"). Zero mudança nos tsconfigs. Zero mudança no código dos adapters — os stubs já estavam corretos; o problema era o comando de typecheck não resolver a dependência.
+
+### Validação
+
+Simulação de CI fresh local:
+```bash
+rm -rf packages/*/dist packages/*/tsconfig.tsbuildinfo apps/*/dist apps/*/tsconfig.tsbuildinfo
+pnpm typecheck
+```
+
+Resultado: **9 de 9 workspace projects passam** (core, adapter-claude-hooks, adapter-claude-sdk, adapter-claude-local, adapter-demo, adapter-mcp, adapter-file-log, server, web). Zero erro.
+
+### Notas Técnicas
+
+- **Por que `tsc -b` funciona:** o modo `--build` do TypeScript é projetado para monorepos com project references. Ele detecta dependências entre projetos e builda na ordem topológica correta, gerando `.d.ts` dos upstream antes de typecheckar os downstream. `tsc --noEmit` sem `-b` ignora references e cada projeto tenta resolver em isolamento.
+- **Escopo expandido justificado:** o brief citava apenas hooks/sdk, mas durante reprodução descobri que demo/claude-local/mcp/file-log/web/server falham pelo mesmo motivo. Corrigir só os dois do brief teria deixado o CI quebrado nos outros — contraproducente. Solução é uniforme, um `tsc -b` em cada.
+- **Adapter-claude-local** já estava instalado no server via `@theater/server/package.json`; seu typecheck antes só passava local porque o `dist` do core sobrevivia em dev. Agora também é resolvido consistentemente.
+- **Sem necessidade de mexer no ci.yml:** o script `pnpm typecheck` continua o mesmo (`pnpm -r typecheck`); só o comando que cada pacote executa dentro dele mudou. Igor não precisa ajustar ordem do CI.
+- **Build side-effect:** `tsc -b` em `build` agora também garante que `core/dist` esteja fresco quando o server/web for buildado. Reforça o comportamento do `dev:server` (v0.13.4) que já chama `build:web` antes de subir.
+
+---
+
 ## [v0.14.14] — 2026-04-19
 
 **Tipo:** Config
