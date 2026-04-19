@@ -1,5 +1,28 @@
 # Patch Notes
 
+## [v0.14.14] — 2026-04-19
+
+**Tipo:** Config
+**Esforço estimado:** 10min
+**Autor:** Claude (igor-devops, Opus 4.7)
+
+### Descrição
+Fix do CI (#8e42c9a4). O run do push v0.14.13 e todos os 10 PRs do Dependabot estavam falhando com `ERR_PNPM_BAD_PM_VERSION` porque `.github/workflows/ci.yml` especificava `version: 10` no `pnpm/action-setup`, enquanto `package.json` raiz declara `"packageManager": "pnpm@10.33.0"` (regra global). Versões modernas do `pnpm/action-setup` leem direto do `packageManager`; declarar nos dois trava.
+
+### Alterações
+- `.github/workflows/ci.yml` — removido `with: version: 10` do step `Configurar pnpm`. A action agora lê a versão exclusivamente do `packageManager` em `package.json`, fonte única da verdade.
+
+### Impacto
+- **Run do CI fica verde** em `Typecheck e Build` para o próximo push em `main`.
+- **10 PRs do Dependabot** vão re-rodar CI automaticamente e desbloquear (ou falhar por outros motivos de bump, mas não mais pelo conflito de versão do pnpm).
+- **Zero impacto em dev local**: a versão do pnpm já era lida do `packageManager` localmente via corepack/shim.
+
+### Notas Técnicas
+- Fonte única da verdade para a versão do pnpm é o campo `packageManager` do `package.json` raiz. Outros workflows (se criados no futuro) devem seguir o mesmo padrão: `uses: pnpm/action-setup@v4` sem `with: version: ...`.
+- Follow-up recomendado (separado): aceitar o Dependabot PR #14 (`bump pnpm/action-setup from 4 to 6`) via web UI do GitHub **depois** deste fix estar em main. V6 é a versão moderna que suporta nativamente este comportamento.
+
+---
+
 ## [v0.14.13] — 2026-04-19
 
 **Tipo:** Fix
