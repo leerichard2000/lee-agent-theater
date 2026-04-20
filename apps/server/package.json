@@ -16,7 +16,7 @@
     "fastify": "^5.2.0",
     "@fastify/websocket": "^11.0.0",
     "@fastify/cors": "^10.0.0",
-    "@fastify/static": "^9.1.1",
+    "@fastify/static": "^9.1.2",
     "@theater/adapter-demo": "workspace:*",
     "@theater/adapter-claude-local": "workspace:*",
     "nanoid": "^5.0.0"
