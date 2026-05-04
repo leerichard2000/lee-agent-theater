@@ -14,12 +14,12 @@
     "@theater/core": "workspace:*",
     "phaser": "^3.87.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react-dom": "^19.2.5",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.0",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
