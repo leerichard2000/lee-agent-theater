@@ -19,7 +19,7 @@
     "@fastify/static": "^9.1.1",
     "@theater/adapter-demo": "workspace:*",
     "@theater/adapter-claude-local": "workspace:*",
-    "nanoid": "^5.0.0"
+    "nanoid": "^5.1.11"
   },
   "devDependencies": {
     "tsx": "^4.19.0",
